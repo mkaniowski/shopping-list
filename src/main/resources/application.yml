@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: shopping-list
+  datasource:
+    url: jdbc:postgresql://localhost:5432/shopping
+    username: shopping
+    password: shopping
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: always
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.example.shoppinglist: DEBUG
