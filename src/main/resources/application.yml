@@ -10,6 +10,16 @@ spring:
     init:
       mode: always
 
+
+keycloak:
+  realm: shopping-list
+  auth-server-url: http://localhost:8090/auth
+  ssl-required: external
+  resource: spring-boot-keycloak
+  credentials:
+    secret: 6rRwvnETqeetTpY9VFoHapcJZJkIDVWl
+  use-resource-role-mappings: true
+
 logging:
   level:
     org.springframework.security: DEBUG
