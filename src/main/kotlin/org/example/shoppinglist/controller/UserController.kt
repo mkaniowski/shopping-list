@@ -1,7 +1,7 @@
 package org.example.shoppinglist.controller
 
-import org.example.shoppinglist.model.User
 import org.example.shoppinglist.model.UserUpdateRequest
+import org.example.shoppinglist.model.entities.User
 import org.example.shoppinglist.service.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -24,21 +24,21 @@ class UserController(private val userService: UserService) {
         return ResponseEntity(res.data, res.status)
     }
 
-    @PatchMapping("/users/{userId}")
+    @PatchMapping("/{userId}")
     fun updateUser(@PathVariable userId: String, @RequestBody user: UserUpdateRequest): ResponseEntity<User> {
         val res = userService.updateUser(userId = userId, user = user)
 
         return ResponseEntity(res.data, res.status)
     }
 
-    @PatchMapping("/users/disable/{userId}")
+    @PatchMapping("/disable/{userId}")
     fun disableUser(@PathVariable userId: String, @RequestParam isDisabled: Boolean): ResponseEntity<User> {
         val res = userService.disableUser(userId = userId, isDisabled = isDisabled)
 
         return ResponseEntity(res.data, res.status)
     }
 
-    @DeleteMapping("/users/{userId}")
+    @DeleteMapping("/{userId}")
     fun deleteUser(@PathVariable userId: String): ResponseEntity<User> {
         val res = userService.deleteUser(userId = userId)
 

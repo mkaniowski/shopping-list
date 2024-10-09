@@ -1,65 +1,66 @@
 package org.example.shoppinglist.service
 
 
-import org.example.shoppinglist.dto.toUser
-import org.example.shoppinglist.dto.toUserDB
 import org.example.shoppinglist.model.ApiResponse
-import org.example.shoppinglist.model.User
 import org.example.shoppinglist.model.UserUpdateRequest
-import org.example.shoppinglist.repository.UsersRepository
+import org.example.shoppinglist.model.entities.User
+import org.example.shoppinglist.repository.UserRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.time.LocalDateTime
-import kotlin.jvm.optionals.getOrNull
+import java.time.ZoneOffset
+import java.util.*
 
 @Service
-class UserService(private val usersRepository: UsersRepository) {
+class UserService(private val userRepository: UserRepository) {
 
     fun getUserById(userId: String): ApiResponse<User?> {
-        val user = usersRepository.findById(userId).getOrNull()
+        val user = userRepository.findById(UUID.fromString(userId)).orElse(null)
             ?: return ApiResponse(_status = HttpStatus.NOT_FOUND, _data = null)
 
         return ApiResponse(
             _status = HttpStatus.OK,
-            _data = user.toUser(),
+            _data = user,
         )
     }
 
     fun getUsers(): ApiResponse<List<User>> {
-        val users = usersRepository.findAll().toList().map { it.toUser() }
+        val users = userRepository.findAll().toList()
 
         return ApiResponse(_status = HttpStatus.OK, _data = users)
     }
 
     fun updateUser(userId: String, user: UserUpdateRequest): ApiResponse<User?> {
-        val _user = usersRepository.findById(userId).getOrNull()
+        val _user = userRepository.findById(UUID.fromString(userId)).orElse(null)
             ?: return ApiResponse(_status = HttpStatus.NOT_FOUND, _data = null)
 
         val update = User(
             id = _user.id,
             email = user.email ?: _user.email,
             username = user.username ?: _user.username,
+            password = _user.password,
             roles = _user.roles,
-            isVerified = _user.is_verified,
-            isDisabled = _user.is_disabled,
-            isDeleted = _user.is_deleted,
-            updatedAt = LocalDateTime.now(),
-            createdAt = _user.created_at
+            isVerified = user.isVerified ?: _user.isVerified,
+            isDisabled = user.isDisabled ?: _user.isDisabled,
+            isDeleted = _user.isDeleted,
+            updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC),
+            createdAt = _user.createdAt
         )
 
-        usersRepository.save(update.toUserDB())
+        userRepository.save(update)
 
         return ApiResponse(_status = HttpStatus.OK, _data = update)
     }
 
     fun disableUser(userId: String, isDisabled: Boolean): ApiResponse<User?> {
-        val _user = usersRepository.findById(userId).getOrNull()
+        val _user = userRepository.findById(UUID.fromString(userId)).orElse(null)
             ?: return ApiResponse(_status = HttpStatus.NOT_FOUND, _data = null)
 
-        var disable: LocalDateTime? = null
+        var disable: Instant? = null
 
         if (isDisabled) {
-            disable = LocalDateTime.now()
+            disable = LocalDateTime.now().toInstant(ZoneOffset.UTC)
         }
 
         val update = User(
@@ -67,20 +68,20 @@ class UserService(private val usersRepository: UsersRepository) {
             email = _user.email,
             username = _user.username,
             roles = _user.roles,
-            isVerified = _user.is_verified,
+            isVerified = _user.isVerified,
             isDisabled = disable,
-            isDeleted = _user.is_deleted,
-            updatedAt = LocalDateTime.now(),
-            createdAt = _user.created_at
+            isDeleted = _user.isDeleted,
+            updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC),
+            createdAt = _user.createdAt
         )
 
-        usersRepository.save(update.toUserDB())
+        userRepository.save(update)
 
         return ApiResponse(_status = HttpStatus.OK, _data = update)
     }
 
     fun deleteUser(userId: String): ApiResponse<User?> {
-        val _user = usersRepository.findById(userId).getOrNull()
+        val _user = userRepository.findById(UUID.fromString(userId)).orElse(null)
             ?: return ApiResponse(_status = HttpStatus.NOT_FOUND, _data = null)
 
         val update = User(
@@ -88,14 +89,14 @@ class UserService(private val usersRepository: UsersRepository) {
             email = _user.email,
             username = _user.username,
             roles = _user.roles,
-            isVerified = _user.is_verified,
-            isDisabled = LocalDateTime.now(),
-            isDeleted = _user.is_deleted,
-            updatedAt = LocalDateTime.now(),
-            createdAt = _user.created_at
+            isVerified = _user.isVerified,
+            isDisabled = LocalDateTime.now().toInstant(ZoneOffset.UTC),
+            isDeleted = _user.isDeleted,
+            updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC),
+            createdAt = _user.createdAt
         )
 
-        usersRepository.save(update.toUserDB())
+        userRepository.save(update)
 
         return ApiResponse(_status = HttpStatus.OK, _data = update)
     }
