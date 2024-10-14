@@ -1,24 +1,40 @@
 spring:
+  config:
+    import: file:.env[.properties]
   application:
     name: shopping-list
   datasource:
-    url: jdbc:postgresql://localhost:5432/shopping
-    username: shopping
-    password: shopping
+    url: jdbc:postgresql://localhost:5432/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   sql:
     init:
       mode: always
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: ${KEYCLOAK_CLIENT_ID}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: openid, profile, email
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8090/realms/${KEYCLOAK_REALM}
 
 
 keycloak:
-  realm: shopping-list
-  auth-server-url: http://localhost:8090/auth
+  realm: ${KEYCLOAK_REALM}
+  auth-server-url: http://localhost:8090/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth
   ssl-required: external
-  resource: spring-boot-keycloak
+  resource: ${KEYCLOAK_CLIENT_ID}
   credentials:
-    secret: 6rRwvnETqeetTpY9VFoHapcJZJkIDVWl
+    secret: ${KEYCLOAK_CLIENT_SECRET}
   use-resource-role-mappings: true
+
 
 logging:
   level:

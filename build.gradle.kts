@@ -21,14 +21,23 @@ repositories {
 
 extra["snippetsDir"] = file("build/generated-snippets")
 
+val keycloakVersion = "25.0.3"
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.keycloak:keycloak-spring-boot-starter:25.0.3")
+    implementation("org.keycloak:keycloak-spring-boot-starter:$keycloakVersion")
+    implementation("org.keycloak:keycloak-spring-security-adapter:$keycloakVersion")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+    implementation("org.springframework.boot:spring-boot-starter-parent:3.1.5")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.keycloak:keycloak-admin-client:$keycloakVersion")
+    implementation("io.github.cdimascio:dotenv-kotlin:6.4.2")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")

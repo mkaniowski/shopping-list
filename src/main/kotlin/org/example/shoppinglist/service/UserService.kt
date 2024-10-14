@@ -1,11 +1,20 @@
 package org.example.shoppinglist.service
 
 
+import org.example.shoppinglist.config.SecurityConfig
+import org.example.shoppinglist.enums.UserRolesEnum
 import org.example.shoppinglist.model.ApiResponse
+import org.example.shoppinglist.model.RegisterUserRequest
 import org.example.shoppinglist.model.UserUpdateRequest
 import org.example.shoppinglist.model.entities.User
 import org.example.shoppinglist.repository.UserRepository
+import org.keycloak.admin.client.Keycloak
+import org.keycloak.representations.idm.CredentialRepresentation
+import org.keycloak.representations.idm.UserRepresentation
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
@@ -13,7 +22,24 @@ import java.time.ZoneOffset
 import java.util.*
 
 @Service
-class UserService(private val userRepository: UserRepository) {
+class UserService(
+    private val userRepository: UserRepository,
+    keycloak: Keycloak,
+    private val securityConfig: SecurityConfig
+) {
+
+    private val realmResource = keycloak.realm("shopping-realm")
+    private val usersResource = realmResource.users()
+
+    fun getCurrentUser(): ApiResponse<User?> {
+        val authentication: Authentication = SecurityContextHolder.getContext().authentication
+
+        val userId = authentication.name
+
+        System.out.println(userId)
+
+        return getUserById(userId)
+    }
 
     fun getUserById(userId: String): ApiResponse<User?> {
         val user = userRepository.findById(UUID.fromString(userId)).orElse(null)
@@ -99,6 +125,54 @@ class UserService(private val userRepository: UserRepository) {
         userRepository.save(update)
 
         return ApiResponse(_status = HttpStatus.OK, _data = update)
+    }
+
+    fun createUser(registerUserRequest: RegisterUserRequest): ApiResponse<User?> {
+        val keycloakUser = UserRepresentation().apply {
+            username = registerUserRequest.username
+            email = registerUserRequest.email
+            firstName = registerUserRequest.firstName
+            lastName = registerUserRequest.lastName
+            isEmailVerified = true
+        }
+
+        val credential = CredentialRepresentation().apply {
+            isTemporary = false
+            type = CredentialRepresentation.PASSWORD
+            value = registerUserRequest.password
+        }
+
+        keycloakUser.credentials = mutableListOf(credential)
+
+        val response = usersResource.create(keycloakUser)
+
+        if (response.status == 409) {
+            return ApiResponse(HttpStatus.CONFLICT)
+        }
+
+        if (response.status != 201) {
+            return ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+
+        val keycloakUserId = usersResource.search(registerUserRequest.username).firstOrNull()?.id
+            ?: return ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR)
+
+        val passwordEncoder = securityConfig.passwordEncoder()
+
+        val newUser = User(
+            id = UUID.fromString(keycloakUserId),
+            email = registerUserRequest.email,
+            username = registerUserRequest.username,
+            password = passwordEncoder.encode(registerUserRequest.password),
+            roles = setOf(UserRolesEnum.ROLE_USER),
+            isVerified = Instant.now(),
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+        userRepository.save(newUser)
+
+        return ApiResponse(HttpStatus.OK, "Successfully created user", newUser)
+
     }
 
 }
