@@ -19,13 +19,11 @@ data class User(
     @Column(name = "username", nullable = false, length = 64)
     val username: String? = null,
 
-    @Column(name = "password", nullable = false, length = 256)
-    val password: String? = null,
-
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "user_roles", joinColumns = [JoinColumn(name = "user_id")])
     @Column(name = "roles", nullable = false)
-    val roles: Set<UserRolesEnum> = setOf(UserRolesEnum.ROLE_USER),
+    var roles: MutableSet<UserRolesEnum> = mutableSetOf(UserRolesEnum.ROLE_USER),
 
     @Column(name = "is_verified")
     val isVerified: Instant? = null,
@@ -56,8 +54,13 @@ data class User(
     override fun hashCode(): Int {
         return id?.hashCode() ?: super.hashCode()
     }
+
     @Override
     override fun toString(): String {
-        return this::class.simpleName + "(id = $id , email = $email , username = $username , password = $password , roles = $roles , isVerified = $isVerified , isDisabled = $isDisabled , isDeleted = $isDeleted , updatedAt = $updatedAt , createdAt = $createdAt )"
+        return this::class.simpleName + "(id = $id , email = $email , username = $username , roles = $roles , isVerified = $isVerified , isDisabled = $isDisabled , isDeleted = $isDeleted , updatedAt = $updatedAt , createdAt = $createdAt )"
+    }
+
+    fun clearRoles() {
+        roles.clear()
     }
 }

@@ -15,6 +15,10 @@ import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper
 import org.springframework.security.core.session.SessionRegistryImpl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.oauth2.jwt.JwtDecoder
+import org.springframework.security.oauth2.jwt.JwtDecoders
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler
@@ -27,10 +31,9 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 class SecurityConfig {
 
     private val publicEndpoints = arrayOf(
-        "/api/v1/login",
         "/swagger-ui/**",
-        "/error",
         "/v3/api-docs/**",
+        "/error",
         "/login",
         "/api/v1/auth/register"
     )
@@ -53,18 +56,36 @@ class SecurityConfig {
                     .requestMatchers(*publicEndpoints)
                     .permitAll()
                     .requestMatchers(*adminEndpoints)
-                    .hasRole("admin")
-                    .requestMatchers(*userEndpoints)
-                    .hasAnyRole("user", "admin")
+                    .hasRole("ADMIN")
                     .anyRequest()
                     .authenticated()
             }
+            .csrf { csrf ->
+                csrf.ignoringRequestMatchers(*publicEndpoints)
+            }
             .oauth2Login { }
+            .oauth2ResourceServer { oauth2 ->
+                oauth2.jwt { jwt ->
+                    jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
+                }
+            }
             .logout {
                 it.logoutSuccessHandler(keycloakLogoutHandler())
                     .permitAll()
             }
             .build()
+    }
+
+
+    private fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
+        val grantedAuthoritiesConverter = JwtGrantedAuthoritiesConverter().apply {
+            setAuthoritiesClaimName("resource_access.shopping-list.roles")
+            setAuthorityPrefix("ROLE_")
+        }
+
+        return JwtAuthenticationConverter().apply {
+            setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter)
+        }
     }
 
     @Bean
@@ -91,6 +112,13 @@ class SecurityConfig {
 
             response.sendRedirect(logoutUrl)
         }
+    }
+
+    @Bean
+    fun jwtDecoder(): JwtDecoder {
+        // Use the issuer URL of your Keycloak realm
+        val issuerUri = "http://localhost:8090/realms/shopping-realm"
+        return JwtDecoders.fromIssuerLocation(issuerUri)
     }
 
     @Bean

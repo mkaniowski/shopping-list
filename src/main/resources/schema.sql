@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS "users"
     "id"          UUID                           NOT NULL DEFAULT gen_random_uuid(),
     "email"       VARCHAR(256)                   NOT NULL,
     "username"    VARCHAR(64)                    NOT NULL,
-    "password"    VARCHAR(256)                   NOT NULL,
     "roles"       VARCHAR(24)[]                  NOT NULL DEFAULT ARRAY ['ROLE_USER'],
     "is_verified" TIMESTAMP(0) WITHOUT TIME ZONE NULL,
     "is_disabled" TIMESTAMP(0) WITHOUT TIME ZONE NULL,
@@ -49,6 +48,14 @@ CREATE TABLE IF NOT EXISTS "shopping_list_items"
     PRIMARY KEY ("id"),
     FOREIGN KEY ("shopping_list_id") REFERENCES "shopping_lists" ("id") ON DELETE CASCADE,
     FOREIGN KEY ("product_id") REFERENCES "products" ("id") ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "user_roles"
+(
+    user_id UUID NOT NULL,
+    roles VARCHAR(255) NOT NULL,
+    PRIMARY KEY (user_id, roles),
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_product_name ON "products" (LOWER("name"));

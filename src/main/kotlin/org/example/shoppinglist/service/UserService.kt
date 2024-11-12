@@ -1,6 +1,6 @@
 package org.example.shoppinglist.service
 
-
+import io.github.cdimascio.dotenv.dotenv
 import org.example.shoppinglist.config.SecurityConfig
 import org.example.shoppinglist.enums.UserRolesEnum
 import org.example.shoppinglist.model.ApiResponse
@@ -9,12 +9,12 @@ import org.example.shoppinglist.model.UserUpdateRequest
 import org.example.shoppinglist.model.entities.User
 import org.example.shoppinglist.repository.UserRepository
 import org.keycloak.admin.client.Keycloak
+import org.keycloak.admin.client.KeycloakBuilder
 import org.keycloak.representations.idm.CredentialRepresentation
 import org.keycloak.representations.idm.UserRepresentation
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
@@ -24,11 +24,10 @@ import java.util.*
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    keycloak: Keycloak,
-    private val securityConfig: SecurityConfig
+    private val securityConfig: SecurityConfig,
+    private val keycloakAdmin: Keycloak
 ) {
-
-    private val realmResource = keycloak.realm("shopping-realm")
+    private val realmResource = keycloakAdmin.realm("shopping-realm")
     private val usersResource = realmResource.users()
 
     fun getCurrentUser(): ApiResponse<User?> {
@@ -65,7 +64,6 @@ class UserService(
             id = _user.id,
             email = user.email ?: _user.email,
             username = user.username ?: _user.username,
-            password = _user.password,
             roles = _user.roles,
             isVerified = user.isVerified ?: _user.isVerified,
             isDisabled = user.isDisabled ?: _user.isDisabled,
@@ -134,6 +132,7 @@ class UserService(
             firstName = registerUserRequest.firstName
             lastName = registerUserRequest.lastName
             isEmailVerified = true
+            isEnabled = true
         }
 
         val credential = CredentialRepresentation().apply {
@@ -157,14 +156,11 @@ class UserService(
         val keycloakUserId = usersResource.search(registerUserRequest.username).firstOrNull()?.id
             ?: return ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR)
 
-        val passwordEncoder = securityConfig.passwordEncoder()
 
         val newUser = User(
             id = UUID.fromString(keycloakUserId),
             email = registerUserRequest.email,
             username = registerUserRequest.username,
-            password = passwordEncoder.encode(registerUserRequest.password),
-            roles = setOf(UserRolesEnum.ROLE_USER),
             isVerified = Instant.now(),
             createdAt = Instant.now(),
             updatedAt = Instant.now()
