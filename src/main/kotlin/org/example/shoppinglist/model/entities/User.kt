@@ -1,5 +1,6 @@
 package org.example.shoppinglist.model.entities
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
@@ -51,9 +52,11 @@ data class User(
     val createdAt: Instant? = null,
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     val shoppingLists: MutableSet<ShoppingList> = mutableSetOf(),
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     val userRoles: MutableSet<UserRole> = mutableSetOf(),
 
     ) {

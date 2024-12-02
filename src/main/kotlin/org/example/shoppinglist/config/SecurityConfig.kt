@@ -38,7 +38,8 @@ class SecurityConfig {
         "/error",
         "/login",
         "/api/v1/auth/register",
-        "/register"
+        "/register",
+        "/api/v1/admin/users"
     )
 
     private val userEndpoints = arrayOf(
@@ -86,6 +87,7 @@ class SecurityConfig {
         val config = CorsConfiguration()
         config.allowCredentials = true
         config.addAllowedOrigin("http://localhost:3000")
+        config.addAllowedOrigin("http://localhost:8000")
         config.addAllowedHeader("*")
         config.addAllowedMethod("*")
         source.registerCorsConfiguration("/**", config)
