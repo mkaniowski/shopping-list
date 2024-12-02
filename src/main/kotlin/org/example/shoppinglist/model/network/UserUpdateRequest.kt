@@ -1,4 +1,4 @@
-package org.example.shoppinglist.model
+package org.example.shoppinglist.model.network
 
 import java.time.Instant
 

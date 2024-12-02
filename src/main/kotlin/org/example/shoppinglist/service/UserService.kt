@@ -1,15 +1,11 @@
 package org.example.shoppinglist.service
 
-import io.github.cdimascio.dotenv.dotenv
-import org.example.shoppinglist.config.SecurityConfig
-import org.example.shoppinglist.enums.UserRolesEnum
 import org.example.shoppinglist.model.ApiResponse
-import org.example.shoppinglist.model.RegisterUserRequest
-import org.example.shoppinglist.model.UserUpdateRequest
+import org.example.shoppinglist.model.network.RegisterUserRequest
+import org.example.shoppinglist.model.network.UserUpdateRequest
 import org.example.shoppinglist.model.entities.User
 import org.example.shoppinglist.repository.UserRepository
 import org.keycloak.admin.client.Keycloak
-import org.keycloak.admin.client.KeycloakBuilder
 import org.keycloak.representations.idm.CredentialRepresentation
 import org.keycloak.representations.idm.UserRepresentation
 import org.springframework.http.HttpStatus
@@ -24,18 +20,22 @@ import java.util.*
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val securityConfig: SecurityConfig,
-    private val keycloakAdmin: Keycloak
+    keycloakAdmin: Keycloak
 ) {
     private val realmResource = keycloakAdmin.realm("shopping-realm")
     private val usersResource = realmResource.users()
 
+    private fun getAuthentication(): Authentication? {
+        return SecurityContextHolder.getContext().authentication
+    }
+
+    fun getCurrentUserRoles(): List<String> {
+        val authentication: Authentication = getAuthentication() ?: return emptyList()
+        return authentication.authorities.map { it.authority }
+    }
+
     fun getCurrentUser(): ApiResponse<User?> {
-        val authentication: Authentication = SecurityContextHolder.getContext().authentication
-
-        val userId = authentication.name
-
-        System.out.println(userId)
+        val userId = getAuthentication()?.name ?: return ApiResponse(_status = HttpStatus.UNAUTHORIZED, _data = null)
 
         return getUserById(userId)
     }

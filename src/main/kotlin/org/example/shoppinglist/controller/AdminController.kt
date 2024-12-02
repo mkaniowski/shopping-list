@@ -1,6 +1,6 @@
 package org.example.shoppinglist.controller
 
-import org.example.shoppinglist.model.UserUpdateRequest
+import org.example.shoppinglist.model.network.UserUpdateRequest
 import org.example.shoppinglist.model.entities.User
 import org.example.shoppinglist.service.UserService
 import org.springframework.http.ResponseEntity

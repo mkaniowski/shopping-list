@@ -24,7 +24,9 @@ import org.springframework.security.web.authentication.logout.LogoutSuccessHandl
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy
-
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import org.springframework.web.filter.CorsFilter
 
 @Configuration
 @EnableWebSecurity
@@ -35,7 +37,8 @@ class SecurityConfig {
         "/v3/api-docs/**",
         "/error",
         "/login",
-        "/api/v1/auth/register"
+        "/api/v1/auth/register",
+        "/register"
     )
 
     private val userEndpoints = arrayOf(
@@ -51,6 +54,7 @@ class SecurityConfig {
     @Throws(Exception::class)
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         return http
+            .cors { }
             .authorizeHttpRequests {
                 it
                     .requestMatchers(*publicEndpoints)
@@ -76,6 +80,17 @@ class SecurityConfig {
             .build()
     }
 
+    @Bean
+    fun corsFilter(): CorsFilter {
+        val source = UrlBasedCorsConfigurationSource()
+        val config = CorsConfiguration()
+        config.allowCredentials = true
+        config.addAllowedOrigin("http://localhost:3000")
+        config.addAllowedHeader("*")
+        config.addAllowedMethod("*")
+        source.registerCorsConfiguration("/**", config)
+        return CorsFilter(source)
+    }
 
     private fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
         val grantedAuthoritiesConverter = JwtGrantedAuthoritiesConverter().apply {

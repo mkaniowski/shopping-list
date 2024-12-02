@@ -1,4 +1,4 @@
-package org.example.shoppinglist.model
+package org.example.shoppinglist.model.network
 
 data class RegisterUserRequest(
     val username: String,

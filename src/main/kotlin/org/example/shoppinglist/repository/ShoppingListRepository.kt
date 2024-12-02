@@ -7,4 +7,5 @@ import java.util.*
 
 @Repository
 interface ShoppingListRepository : JpaRepository<ShoppingList, UUID> {
+    fun findByUserId(userId: UUID): List<ShoppingList>
 }
