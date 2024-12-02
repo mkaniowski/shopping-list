@@ -39,6 +39,7 @@ dependencies {
     implementation("org.keycloak:keycloak-admin-client:$keycloakVersion")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.2")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("javax.ws.rs:javax.ws.rs-api:2.1")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
